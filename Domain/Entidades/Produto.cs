@@ -13,6 +13,7 @@ namespace Domain.Entidades
         public string Descricao { get; private set; }
         public decimal Valor { get; private set; }
         public int Estoque { get; private set; }
+        public int Pontos { get; private set; }
 
 
         public int CategoriaId { get; private set; }
@@ -22,6 +23,11 @@ namespace Domain.Entidades
 
         public Produto() { }
 
+        public void AtualizarEstoque(int novoEstoque)
+        {
+            Estoque = novoEstoque;
+        }
+
         public Produto(ProdutoDTO produtoDTO) 
         {
             Nome = produtoDTO.Nome;
@@ -30,6 +36,7 @@ namespace Domain.Entidades
             Valor = produtoDTO.Valor;
             Estoque = produtoDTO.Estoque;
             CategoriaId = produtoDTO.CategoriaId;
+            Pontos = produtoDTO.Pontos;
 
             new AddNotifications<Produto>(this).IfNullOrEmpty(x => x.Nome, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("nome"));
             new AddNotifications<Produto>(this).IfNullOrEmpty(x => x.Codigo, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("codigo"));
@@ -37,6 +44,7 @@ namespace Domain.Entidades
             new AddNotifications<Produto>(this).IfEqualsZero(x => x.Valor, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("valor"));
             new AddNotifications<Produto>(this).IfEqualsZero(x => x.Estoque, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("estoque"));
             new AddNotifications<Produto>(this).IfEqualsZero(x => x.CategoriaId, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("categoriaid"));
+            new AddNotifications<Produto>(this).IfEqualsZero(x => x.Pontos, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("pontos"));
         }
 
         public void Atualizar(ProdutoDTO produtoDTO)
@@ -47,6 +55,7 @@ namespace Domain.Entidades
             Valor = produtoDTO.Valor;
             Estoque = produtoDTO.Estoque;
             CategoriaId = produtoDTO.CategoriaId;
+            Pontos = produtoDTO.Pontos;
 
 
             new AddNotifications<Produto>(this).IfNullOrEmpty(x => x.Nome, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("nome"));
@@ -54,6 +63,7 @@ namespace Domain.Entidades
             new AddNotifications<Produto>(this).IfNullOrEmpty(x => x.Descricao, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("descricao"));
             new AddNotifications<Produto>(this).IfEqualsZero(x => x.Valor, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("valor"));
             new AddNotifications<Produto>(this).IfEqualsZero(x => x.Estoque, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("estoque"));
+            new AddNotifications<Produto>(this).IfEqualsZero(x => x.Pontos, Mensagens.O_CAMPO_X0_E_OBRIGATORIO.ToFormat("pontos"));
         }
 
     }

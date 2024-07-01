@@ -8,17 +8,20 @@ using prmToolkit.NotificationPattern.Extensions;
 using Zicard.API.Common.Recursos;
 using System.Collections.Generic;
 using Zicard.API.Common.Extensoes;
+using Infra.Persistencias.Repositorios;
 
 namespace Infra.Servicos
 {
     public class ServicoProduto : Notifiable, IServicoProduto
     {
         private readonly IRepositorioProduto _repositorioProduto;
+        private readonly IRepositorioUsuario _repositorioUsuario;
         private readonly IMapper _mapper;
 
-        public ServicoProduto(IRepositorioProduto repositorioProduto, IMapper mapper)
+        public ServicoProduto(IRepositorioProduto repositorioProduto,IRepositorioUsuario repositorioUsuario, IMapper mapper)
         {
             _repositorioProduto = repositorioProduto;
+            _repositorioUsuario = repositorioUsuario;
             _mapper = mapper;
         }
 
@@ -88,6 +91,43 @@ namespace Infra.Servicos
             }
 
             _repositorioProduto.Remover(id);
+        }
+
+        public CompraDTO Comprar(int produtoId, int usuarioId, int quantidade)
+        {
+            var produto = _repositorioProduto.ObterPorId(produtoId);
+            if (produto == null)
+            {
+                AddNotification("Produto", Mensagens.DADOS_NAO_ENCONTRADOS);
+                return null;
+            }
+
+            var usuario = _repositorioUsuario.ObterPorId(usuarioId);
+            if (usuario == null)
+            {
+                AddNotification("Usuario", Mensagens.DADOS_NAO_ENCONTRADOS);
+                return null;
+            }
+
+            if (produto.Estoque < quantidade)
+            {
+                AddNotification("Produto", Mensagens.ERRO_OPERACAO_NAO_REALIZADA);
+                return null;
+            }
+
+            produto.AtualizarEstoque(produto.Estoque - quantidade);
+            usuario.AdicionarPontos(produto.Pontos * quantidade);
+
+            _repositorioProduto.Editar(produto);
+            _repositorioUsuario.Editar(usuario);
+
+            return new CompraDTO
+            {
+                ProdutoId = produto.Id,
+                UsuarioId = usuario.Id,
+                Quantidade = quantidade,
+                PontosGanho = produto.Pontos * quantidade
+            };
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
+using prmToolkit.NotificationPattern;
 
 namespace Infra.Persistencias
 {
@@ -9,7 +10,7 @@ namespace Infra.Persistencias
         {
         }
 
-        public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Usuario> Usuario { get; set; }
         public DbSet<Produto> Produtos { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<Endereco> Enderecos { get; set; }
@@ -22,6 +23,8 @@ namespace Infra.Persistencias
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Ignore<Notification>();
+
             modelBuilder.Entity<Endereco>()
                 .HasOne(e => e.Usuario)
                 .WithMany(u => u.Enderecos)
@@ -41,6 +44,26 @@ namespace Infra.Persistencias
                 .HasOne(e => e.Produto)
                 .WithMany(u => u.Pedido)
                 .HasForeignKey(e => e.ProdutoId);
+        }
+
+        public override int SaveChanges()
+        {
+            AddTimestamps();
+            return base.SaveChanges();
+        }
+
+        private void AddTimestamps()
+        {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Property("DataInclusao").CurrentValue = DateTime.Now;
+                }
+
+                if (entry.State != EntityState.Modified) continue;
+                entry.Property("DataAlteracao").CurrentValue = DateTime.Now;
+            }
         }
     }
 }

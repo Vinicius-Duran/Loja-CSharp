@@ -10,10 +10,9 @@ namespace Domain.Argumentos
         public string Descricao { get;  set; }
         public decimal Valor { get;  set; }
         public int Estoque { get;  set; }
-
+        public int Pontos { get;  set; }
 
         public int CategoriaId { get;  set; }
-        public virtual Categoria Categoria { get;  set; }
-        public virtual ICollection<Pedido> Pedido { get;  set; }
+       
     }
 }

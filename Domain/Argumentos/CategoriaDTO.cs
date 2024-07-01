@@ -7,7 +7,7 @@ namespace Domain.Argumentos
     {
         public string Nome { get;  set; }
 
-        public virtual ICollection<Produto> Produto { get;  set; }
+        
     }
 }
 

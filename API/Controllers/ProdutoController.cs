@@ -61,5 +61,22 @@ namespace API.Controllers
             _servicoProduto.Remover(id);
             return NoContent();
         }
+
+        [HttpPost("comprar")]
+        public IActionResult Comprar([FromBody] CompraDTO compraDTO)
+        {
+            if (compraDTO == null || !ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = _servicoProduto.Comprar(compraDTO.ProdutoId, compraDTO.UsuarioId, compraDTO.Quantidade);
+            if (result == null)
+            {
+                return BadRequest(_servicoProduto.Notifications);
+            }
+
+            return Ok(result);
+        }
     }
 }

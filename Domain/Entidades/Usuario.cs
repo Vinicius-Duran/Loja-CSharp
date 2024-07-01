@@ -14,11 +14,17 @@ namespace Domain.Entidades
         public string Senha { get; private set; }
         public string Cpf { get; private set; }
         public string Celular { get; private set; }
+        public int Pontos { get; private set; }
 
         public virtual ICollection<Endereco> Enderecos { get; private set; }
         public virtual ICollection<Pedido> Pedido { get; private set; }
 
         public Usuario() { }
+
+        public void AdicionarPontos(int pontos)
+        {
+            Pontos += pontos;
+        }
 
         public Usuario(UsuarioDTO usuarioDTO)
         {

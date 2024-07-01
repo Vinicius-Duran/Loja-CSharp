@@ -10,5 +10,6 @@ namespace Domain.Interfaces.Servicos
         IEnumerable<ProdutoDTO> Listar();
         ProdutoDTO ObterPorId(int id);
         void Remover(int id);
+        CompraDTO Comprar(int produtoId, int usuarioId, int quantidade);
     }
 }
