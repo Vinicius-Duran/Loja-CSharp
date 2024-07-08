@@ -3,9 +3,14 @@ using Domain.Argumentos;
 using Domain.Entidades;
 using Domain.Interfaces.Repositorios;
 using Domain.Interfaces.Servicos;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using prmToolkit.NotificationPattern;
 using prmToolkit.NotificationPattern.Extensions;
 using Sentry.Protocol;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Zicard.API.Common.Extensoes;
 using Zicard.API.Common.Recursos;
 
@@ -15,11 +20,42 @@ namespace Infra.Servicos
     {
         private readonly IRepositorioUsuario _repositorioUsuario;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
 
-        public ServicoUsuario(IRepositorioUsuario repositorioUsuario, IMapper mapper)
+        public ServicoUsuario(IRepositorioUsuario repositorioUsuario, IMapper mapper, IConfiguration configuration)
         {
             _repositorioUsuario = repositorioUsuario;
             _mapper = mapper;
+            _configuration = configuration;
+        }
+
+        public string Autenticar(string email, string senha)
+        {
+            var usuario = _repositorioUsuario.ObterPorEmailSenha(email, senha);
+
+            if (usuario == null)
+            {
+                AddNotification("Autenticar", "Usuário ou senha inválidos");
+                return null;
+            }
+
+            // Gera o token JWT
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, usuario.Id.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
+                    // Adicione outras claims conforme necessário
+                }),
+                Expires = DateTime.UtcNow.AddHours(1), // Tempo de expiração do token
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
 
         public UsuarioDTO Adicionar(UsuarioDTO usuarioDTO)

@@ -15,5 +15,6 @@ namespace Domain.Interfaces.Servicos
         IEnumerable<UsuarioDTO> Listar();
         UsuarioDTO ObterPorId(int id);
         void Remover(int id);
+        string Autenticar(string email, string senha);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Entidades;
 using Domain.Interfaces.Repositorios;
+using Microsoft.EntityFrameworkCore;
 using Zicard.API.Common.Persistencia.Repositorios.Base;
 
 namespace Infra.Persistencias.Repositorios
@@ -11,6 +12,11 @@ namespace Infra.Persistencias.Repositorios
         public RepositorioUsuario(APIContexto context) : base(context)
         {
             _context = context;
+        }
+
+        public Usuario ObterPorEmailSenha(string email, string senha)
+        {
+            return _context.Set<Usuario>().FirstOrDefault(u => u.Email == email && u.Senha == senha);
         }
 
         public void Remover(int id)

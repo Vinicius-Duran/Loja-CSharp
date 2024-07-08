@@ -16,6 +16,17 @@ namespace API.Controllers
             _servicoUsuario = servicoUsuario;
         }
 
+        /*[HttpPost("login")]
+        public IActionResult Login([FromBody] LoginDTO loginDTO)
+        {
+            var token = _servicoUsuario.Autenticar(loginDTO.Email, loginDTO.Senha);
+
+            if (token == null)
+                return Unauthorized();
+
+            return Ok(new { Token = token });
+        }*/
+
         [HttpPost]
         public IActionResult Adicionar([FromBody] UsuarioDTO usuarioDTO)
         {

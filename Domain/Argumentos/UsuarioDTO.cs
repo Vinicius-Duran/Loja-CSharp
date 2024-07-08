@@ -12,7 +12,7 @@ namespace Domain.Argumentos
         public string Celular { get;  set; }
         public int Pontos { get;  set; }
 
-        public virtual ICollection<EnderecoDTO> Enderecos { get;  set; }
-        public virtual ICollection<PedidoDTO> Pedido { get;  set; }
+        public virtual ICollection<Endereco> Enderecos { get;  set; }
+        public virtual ICollection<Pedido> Pedido { get;  set; }
     }
 }

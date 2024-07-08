@@ -6,5 +6,6 @@ namespace Domain.Interfaces.Repositorios
     public interface IRepositorioUsuario : IRepositorioBase<Usuario, int>
     {
         void Remover(int id);
+        Usuario ObterPorEmailSenha(string email, string senha);
     }
 }

@@ -1,83 +1,133 @@
-﻿using Domain.Interfaces.Repositorios;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System;
+using System.Text;
+using Domain.Interfaces.Repositorios;
 using Domain.Interfaces.Servicos;
-using Infra.Persistencias;
 using Infra.Persistencias.Repositorios;
 using Infra.Servicos;
+using AutoMapper;
+using Infra.Persistencias;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 
-namespace API
+public class Startup
 {
-    public class Startup
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+        Configuration = configuration;
+    }
 
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddDbContext<APIContexto>(options =>
         {
-            // Configuração do DbContext
-            services.AddDbContext<APIContexto>(options => {
-                options.UseLazyLoadingProxies();
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
+            options.UseLazyLoadingProxies();
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                 builder => builder.MigrationsAssembly("Infra"));
-            });
+        });
 
+        // Configurações de DI para repositórios e serviços
+        services.AddScoped<IRepositorioCategoria, RepositorioCategoria>();
+        services.AddScoped<IRepositorioEndereco, RepositorioEndereco>();
+        services.AddScoped<IRepositorioPedido, RepositorioPedido>();
+        services.AddScoped<IRepositorioProduto, RepositorioProduto>();
+        services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
 
+        services.AddScoped<IServicoCategoria, ServicoCategoria>();
+        services.AddScoped<IServicoEndereco, ServicoEndereco>();
+        services.AddScoped<IServicoPedido, ServicoPedido>();
+        services.AddScoped<IServicoProduto, ServicoProduto>();
+        services.AddScoped<IServicoUsuario, ServicoUsuario>();
 
-            // Outros serviços
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Financeiro", Version = "v1" });
-            });
+        services.AddCors();
 
-            services.AddAutoMapper(typeof(MappingProfile));
+        services.AddAutoMapper(typeof(MappingProfile));
 
-            services.AddScoped<IRepositorioCategoria, RepositorioCategoria>();
-            services.AddScoped<IRepositorioEndereco, RepositorioEndereco>();
-            services.AddScoped<IRepositorioPedido, RepositorioPedido>();
-            services.AddScoped<IRepositorioProduto, RepositorioProduto>();
-            services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
-
-            services.AddCors();
-            
-            services.AddScoped<IServicoCategoria, ServicoCategoria>();
-            services.AddScoped<IServicoEndereco, ServicoEndereco>();
-            services.AddScoped<IServicoPedido, ServicoPedido>();
-            services.AddScoped<IServicoProduto, ServicoProduto>();
-            services.AddScoped<IServicoUsuario, ServicoUsuario>();
-
-
-
-        }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        // Configuração do JWT
+        var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
+        services.AddAuthentication(options =>
         {
-            // Configuração do Swagger
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "NomeDaSuaAPI v1");
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidIssuer = Configuration["Jwt:Issuer"],
+                ValidAudience = Configuration["Jwt:Audience"],
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+        services.AddAuthorization();
+
+        // Configuração do Swagger
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "1.0" });
+
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "Entre com o Token JWT",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey
             });
 
-            // Outras configurações de middleware
-            app.UseHttpsRedirection();
-            app.UseRouting();
-            app.UseCors(policy =>
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
-                policy.AllowAnyOrigin();
-                policy.AllowAnyHeader();
-                policy.AllowAnyMethod();
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Id = "Bearer",
+                            Type = ReferenceType.SecurityScheme
+                        }
+                    }, new string[] { }
+                }
             });
-            app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
+        });
+
+        services.AddControllers();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+            c.RoutePrefix = string.Empty;
+        });
+
+        app.UseHttpsRedirection();
+        app.UseRouting();
+
+        app.UseCors(policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyHeader();
+            policy.AllowAnyMethod();
+        });
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
     }
 }

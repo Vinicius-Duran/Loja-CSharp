@@ -1,5 +1,6 @@
 ﻿using Domain.Argumentos;
 using Domain.Interfaces.Servicos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -37,8 +38,9 @@ namespace API.Controllers
             }
             return Ok(categoriaEditada);
         }
-
+        
         [HttpGet]
+        [Authorize]
         public IEnumerable<CategoriaDTO> Listar()
         {
             return _servicoCategoria.Listar();
