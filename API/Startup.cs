@@ -12,6 +12,7 @@ using Infra.Servicos;
 using AutoMapper;
 using Infra.Persistencias;
 using Microsoft.EntityFrameworkCore;
+using Utilidade;
 
 public class Startup
 {
@@ -31,6 +32,7 @@ public class Startup
                 builder => builder.MigrationsAssembly("Infra"));
         });
 
+        /*
         // Configurações de DI para repositórios e serviços
         services.AddScoped<IRepositorioCategoria, RepositorioCategoria>();
         services.AddScoped<IRepositorioEndereco, RepositorioEndereco>();
@@ -42,11 +44,13 @@ public class Startup
         services.AddScoped<IServicoEndereco, ServicoEndereco>();
         services.AddScoped<IServicoPedido, ServicoPedido>();
         services.AddScoped<IServicoProduto, ServicoProduto>();
-        services.AddScoped<IServicoUsuario, ServicoUsuario>();
+        services.AddScoped<IServicoUsuario, ServicoUsuario>();*/
 
         services.AddCors();
 
         services.AddAutoMapper(typeof(MappingProfile));
+
+        DependencyResolver.Resolve(services);
 
         // Configuração do JWT
         var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
